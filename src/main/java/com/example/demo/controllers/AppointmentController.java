@@ -6,6 +6,7 @@ import com.example.demo.entities.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,12 +52,37 @@ public class AppointmentController {
     }
 
     @PostMapping("/appointment")
-    public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment){
-        /** TODO 
-         * Implement this function, which acts as the POST /api/appointment endpoint.
-         * Make sure to check out the whole project. Specially the Appointment.java class
-         */
-        return new ResponseEntity<>(HttpStatus.I_AM_A_TEAPOT);
+    public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment) {
+        List<Appointment> existingAppointments = new ArrayList<>(appointmentRepository.findAll());
+        HttpStatus status = validateAppointment(appointment, existingAppointments);
+
+        if (status != null) {
+            return new ResponseEntity<>(status);
+        }
+
+        existingAppointments.add(appointmentRepository.save(appointment));
+
+        return new ResponseEntity<>(existingAppointments, HttpStatus.OK);
+    }
+
+    private HttpStatus validateAppointment(Appointment appointment, List<Appointment> appointments) {
+
+        if (!isTimeRangeValid(appointment)) {
+            return HttpStatus.BAD_REQUEST;
+        }
+
+        if (isConflict(appointment, appointments)) {
+            return HttpStatus.NOT_ACCEPTABLE;
+        }
+        return null;
+    }
+
+    private boolean isTimeRangeValid(Appointment appointment) {
+        return appointment.getFinishesAt().isAfter(appointment.getStartsAt());
+    }
+
+    private boolean isConflict(Appointment appointment, List<Appointment> appointments) {
+        return appointments.stream().anyMatch(appointment::overlaps);
     }
 
 
