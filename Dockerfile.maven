@@ -1,0 +1,22 @@
+# Stage 1: Test
+FROM maven:3.9.4-eclipse-temurin-8-alpine as tester
+COPY . /app/tests
+WORKDIR /app/tests
+RUN mvn test
+
+# Stage 2: Build
+FROM maven:3.9.4-eclipse-temurin-8-alpine as builder
+COPY --from=tester /app/tests /app
+WORKDIR /app
+RUN mvn package -DskipTests
+
+# Stage 3: Run
+FROM openjdk:8-jdk-alpine
+COPY --from=builder /app/target/accenture-techhub-0.0.1-SNAPSHOT.war /app/app.war
+EXPOSE 8080
+
+ENV SPRING_DATASOURCE_USERNAME=root
+ENV SPRING_DATASOURCE_PASSWORD=pass
+ENV SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/accwe-hospital
+
+CMD ["sh", "-c", "while ! nc -z mysql-container 3306; do sleep 5; done; java -jar /app/app.war"]

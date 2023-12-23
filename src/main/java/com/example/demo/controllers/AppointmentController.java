@@ -52,7 +52,8 @@ public class AppointmentController {
     }
 
     @PostMapping("/appointment")
-    public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment) {
+    public ResponseEntity<List<Appointment>> createAppointment(@RequestBody Appointment appointment)
+    {
         List<Appointment> existingAppointments = new ArrayList<>(appointmentRepository.findAll());
         HttpStatus status = validateAppointment(appointment, existingAppointments);
 
