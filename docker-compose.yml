@@ -1,0 +1,32 @@
+version: "3.8"
+services:
+  microservice-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.maven
+    image: nuwe-chall-api-image:v1
+    container_name: microservice-container
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql-db
+    networks:
+      - nuwe-chall-net
+
+  mysql-db:
+    build:
+      context: .
+      dockerfile: Dockerfile.mysql
+    image: nuwe-chall-db-image:v1
+    container_name: mysql-container
+    ports:
+      - "3307:3306"
+    networks:
+      - nuwe-chall-net
+
+volumes:
+  nuwe-chall:
+
+networks:
+  nuwe-chall-net:
+    driver: bridge
